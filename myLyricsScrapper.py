@@ -42,8 +42,8 @@ def task(previous_title):
     metadata = player.Get('org.mpris.MediaPlayer2.Player', 'Metadata', dbus_interface='org.freedesktop.DBus.Properties')
     if metadata["xesam:title"]!=previous_title or previous_title == 'NULL':
         flag = 0
-        print 'Song Title : ' + metadata["xesam:title"]
-        print 'Song Artist: ' + metadata["xesam:artist"][0]
+        print 'Your Song Title : ' + metadata["xesam:title"]
+        print 'Your Song Artist: ' + metadata["xesam:artist"][0]
         song_title = metadata["xesam:title"]
         artist_name = metadata["xesam:artist"][0]
         if __name__ == "__main__":
@@ -83,36 +83,52 @@ def task(previous_title):
             # root.update()
           if not song_info:
             print "No Lyrics Found on Genius, Could Be a Remix, "
-            print "Remastered, Live or a Spotify only song"
+            print "Remastered, Live, Radio Edit or a Spotify only song"
             print "Searching again with less strict parameters"
             print "High Error Expected"
-            song_api_path = json["response"]["hits"][0]["result"]["api_path"]
-            # print song_api_path
-            print "Keep Your Fingers Crossed"
-            title = json["response"]["hits"][0]["result"]["title"]
-            artist_name = json["response"]["hits"][0]["result"]["primary_artist"]["name"]
-            #GUI
-            root.title(song_title + " -BY- " + artist_name)
-            s.pack(side=RIGHT, fill=Y)
-            w.pack()
-            s.config(command=w.yview)
-            w.config(yscrollcommand=s.set)
-            w.config(state=NORMAL)
-            w.config(background='#FFFF00')
-            song_lyrics_001 = lyrics_from_song_api_path(song_api_path)
-            w.delete(1.0, END)
-            song_meta_artist_title = \
-                  "Song Title : " + song_title + "\n" \
-                  "Song Artist: " + artist_name 
-            w.insert(1.0, song_meta_artist_title, 'center')
-            w.insert(END, song_lyrics_001, 'center')
-            w.config(state=DISABLED)
-            # # root.update_idletasks()
-            # # root.update()
+            if len(json["response"]["hits"]):
+                song_api_path = json["response"]["hits"][0]["result"]["api_path"]
+                # print song_api_path
+                print "Keep Your Fingers Crossed"
+                title = json["response"]["hits"][0]["result"]["title"]
+                artist_name = json["response"]["hits"][0]["result"]["primary_artist"]["name"]
+                #GUI
+                root.title(song_title + " -BY- " + artist_name)
+                s.pack(side=RIGHT, fill=Y)
+                w.pack()
+                s.config(command=w.yview)
+                w.config(yscrollcommand=s.set)
+                w.config(state=NORMAL)
+                w.config(background='#FFFF00')
+                song_lyrics_001 = lyrics_from_song_api_path(song_api_path)
+                w.delete(1.0, END)
+                song_meta_artist_title = \
+                      "Lyrics Song Title : " + song_title + "\n" \
+                      "Lyrics Song Artist: " + artist_name + "\n\n" + \
+                      "-------------------------------------------------\n" +\
+                      "DISCLAIMER: THIS SONG IS SEARCHED USING \n VERY LESS STRICT PARAMETERS\n" +\
+                      "HENCE THIS LYRICS CAN BE THE INACCURATE ONE" + \
+                      "-------------------------------------------------\n"
+                w.insert(1.0, song_meta_artist_title, 'center')
+                w.insert(END, song_lyrics_001, 'center')
+                w.config(state=DISABLED)
+                # # root.update_idletasks()
+                # # root.update()
+            else :
+              root.title("No Lyrics Found for\n")
+              s.pack(side=RIGHT, fill=Y)
+              w.pack()
+              s.config(command=w.yview)
+              w.config(yscrollcommand=s.set)
+              w.config(state=NORMAL)
+              w.config(background='#FFFF00')
+              w.delete(1.0, END)
+              w.insert(1.0, "Sorry No Lyrics Found for \n\n\n\n\n Your Song Title : " + song_title + "\n Your Artist Name: " + artist_name + "\n\n\n\n\nChange Song or Check Internet/Proxy Settings for Python", 'center')
+              w.config(state=DISABLED)
 
         print "------------------------------------------------------------------"
         previous_title = metadata["xesam:title"]
-    root.after(500, task, previous_title)
+    root.after(1000, task, previous_title)
         
 
 root.after(0, task, previous_title)
