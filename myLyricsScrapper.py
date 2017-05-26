@@ -11,6 +11,8 @@ player = session_bus.get_object('org.mpris.MediaPlayer2.spotify', '/org/mpris/Me
 
 metadata = player.Get('org.mpris.MediaPlayer2.Player', 'Metadata', dbus_interface='org.freedesktop.DBus.Properties')
 
+print "\tSearches Lyrics From Genius"
+print "\tUsing The Song Title and Song Artist"
 
 def lyrics_from_song_api_path(song_api_path):
   song_url = base_url + song_api_path
@@ -30,12 +32,18 @@ def lyrics_from_song_api_path(song_api_path):
 previous_title = 'NULL'
 print "------------------------------------------------------------------"
 
-while 1:
+root = Tk()
+s = Scrollbar(root)
+w = Text(root, height= 60)
+w.tag_configure("center", justify='center')
+# w.tag_add("center", 1.0, "end")
+
+def task(previous_title):
     metadata = player.Get('org.mpris.MediaPlayer2.Player', 'Metadata', dbus_interface='org.freedesktop.DBus.Properties')
     if metadata["xesam:title"]!=previous_title or previous_title == 'NULL':
-        root = Tk()
-        print '-------' + metadata["xesam:title"] + '-------'
-        print '-------' + metadata["xesam:artist"][0] + '-------'
+        flag = 0
+        print 'Song Title : ' + metadata["xesam:title"]
+        print 'Song Artist: ' + metadata["xesam:artist"][0]
         song_title = metadata["xesam:title"]
         artist_name = metadata["xesam:artist"][0]
         if __name__ == "__main__":
@@ -50,19 +58,62 @@ while 1:
             if hit["result"]["primary_artist"]["name"].upper() == artist_name.upper():
               song_info = hit
               break
+
           if song_info:
             song_api_path = song_info["result"]["api_path"]
-            print song_api_path
+            # print song_api_path
+            print "Lyrics Exists. Scraping Lyrics. Please Wait ..."
             #GUI
-            s = Scrollbar(root)
-            w = Text(root, height= 60)
+            root.title(song_title + " -BY- " + artist_name)
             s.pack(side=RIGHT, fill=Y)
             w.pack()
             s.config(command=w.yview)
             w.config(yscrollcommand=s.set)
-            w.insert(END, lyrics_from_song_api_path(song_api_path))
-            root.mainloop()
+            w.config(state=NORMAL)
+            w.config(background='#FFFF00')
+            song_lyrics_001 = lyrics_from_song_api_path(song_api_path)
+            w.delete(1.0, END)
+            song_meta_artist_title = \
+                  "Song Title : " + song_title + "\n" \
+                  "Song Artist: " + artist_name 
+            w.insert(1.0, song_meta_artist_title, 'center')
+            w.insert(END, song_lyrics_001, 'center')
+            w.config(state=DISABLED)
             # root.update_idletasks()
             # root.update()
+          if not song_info:
+            print "No Lyrics Found on Genius, Could Be a Remix, "
+            print "Remastered, Live or a Spotify only song"
+            print "Searching again with less strict parameters"
+            print "High Error Expected"
+            song_api_path = json["response"]["hits"][0]["result"]["api_path"]
+            # print song_api_path
+            print "Keep Your Fingers Crossed"
+            title = json["response"]["hits"][0]["result"]["title"]
+            artist_name = json["response"]["hits"][0]["result"]["primary_artist"]["name"]
+            #GUI
+            root.title(song_title + " -BY- " + artist_name)
+            s.pack(side=RIGHT, fill=Y)
+            w.pack()
+            s.config(command=w.yview)
+            w.config(yscrollcommand=s.set)
+            w.config(state=NORMAL)
+            w.config(background='#FFFF00')
+            song_lyrics_001 = lyrics_from_song_api_path(song_api_path)
+            w.delete(1.0, END)
+            song_meta_artist_title = \
+                  "Song Title : " + song_title + "\n" \
+                  "Song Artist: " + artist_name 
+            w.insert(1.0, song_meta_artist_title, 'center')
+            w.insert(END, song_lyrics_001, 'center')
+            w.config(state=DISABLED)
+            # # root.update_idletasks()
+            # # root.update()
+
         print "------------------------------------------------------------------"
         previous_title = metadata["xesam:title"]
+    root.after(500, task, previous_title)
+        
+
+root.after(0, task, previous_title)
+root.mainloop()
